@@ -1,0 +1,51 @@
+name: CI - Build & Push Docker Image
+
+on:
+  push:
+    branches:
+      - main
+
+env:
+  AWS_REGION: ${{ secrets.AWS_REGION }}
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      # Step 1: Checkout repo
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      # Step 2: Configure AWS credentials
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      # Step 3: Login to Amazon ECR
+      - name: Login to Amazon ECR
+        run: |
+          aws ecr get-login-password --region ${{ env.AWS_REGION }} | \
+          docker login --username AWS --password-stdin ${{ secrets.ECR_REGISTRY }}
+
+      # Step 4: Build Docker image using Docker.aws
+      - name: Build Docker image
+        run: |
+          docker build -f Dockerfile.aws -t ${{ secrets.ECR_REPO }}:${{ github.sha }} .
+
+      # Step 5: Push Docker image to ECR
+      - name: Push Docker image
+        run: |
+          docker push ${{ secrets.ECR_REPO }}:${{ github.sha }}
+
+      # Step 6: Set image tag output for CD workflow
+      - name: Set image tag output
+        id: image
+        run: echo "image_tag=${{ github.sha }}" >> $GITHUB_OUTPUT
+
+    # Job-level output to expose image_tag
+    outputs:
+      image_tag: ${{ steps.image.outputs.image_tag }}

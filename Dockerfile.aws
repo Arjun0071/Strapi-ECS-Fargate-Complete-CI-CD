@@ -1,0 +1,38 @@
+# Stage 1: Build Strapi Admin
+FROM node:18-alpine AS build
+
+WORKDIR /app
+
+# Copy dependency files first
+COPY package*.json ./
+COPY yarn.lock ./
+
+# Install dependencies
+RUN yarn install
+
+# Copy application source
+COPY . .
+
+# Build the Strapi admin panel
+ENV NODE_ENV=production
+RUN yarn build
+
+
+# Stage 2: Final Production Image
+FROM node:18-alpine
+
+WORKDIR /app
+
+# Copy only prod dependencies
+COPY package*.json ./
+COPY yarn.lock ./
+RUN yarn install --production --frozen-lockfile
+
+# Copy everything including prebuilt admin from stage 1
+COPY --from=build /app /app
+
+EXPOSE 1337
+
+# Run Strapi in production mode
+CMD ["yarn", "start"]
+
