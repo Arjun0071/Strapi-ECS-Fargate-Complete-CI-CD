@@ -42,8 +42,8 @@ resource "aws_cloudwatch_metric_alarm" "ecs_task_unhealthy" {
   threshold           = 1
 
   dimensions = {
-    LoadBalancer = aws_lb.alb.arn_suffix
-    TargetGroup  = aws_lb_target_group.tg.arn_suffix
+     LoadBalancer = aws_lb.alb.name
+     TargetGroup  = aws_lb_target_group.tg.arn_suffix
   }
 }
 
@@ -71,23 +71,63 @@ resource "aws_cloudwatch_metric_alarm" "ecs_target_latency_high" {
 # -----------------------------
 resource "aws_cloudwatch_dashboard" "ecs_dashboard" {
   dashboard_name = "strapi-ecs-dashboard"
+
   dashboard_body = jsonencode({
     widgets = [
+      # CPU Utilization widget
       {
-        type   = "metric"
-        x      = 0
-        y      = 0
-        width  = 12
-        height = 6
+        type       = "metric"
+        x          = 0
+        y          = 0
+        width      = 12
+        height     = 6
         properties = {
-          metrics = [
-            [ "AWS/ECS", "CPUUtilization", "ClusterName", aws_ecs_cluster.cluster.name, "ServiceName", aws_ecs_service.strapi_service.name ],
-            [ "AWS/ECS", "MemoryUtilization", "ClusterName", aws_ecs_cluster.cluster.name, "ServiceName", aws_ecs_service.strapi_service.name ],
-            [ "AWS/ApplicationELB", "UnhealthyHostCount", "LoadBalancer", aws_lb.alb.arn_suffix, "TargetGroup", aws_lb_target_group.tg.arn_suffix ],
-            [ "AWS/ApplicationELB", "TargetResponseTime", "LoadBalancer", aws_lb.alb.arn_suffix, "TargetGroup", aws_lb_target_group.tg.arn_suffix ]
+          metrics     = [
+            ["AWS/ECS", "CPUUtilization", "ClusterName", "strapi-cluster", "ServiceName", "strapi-service"]
           ]
-          period = 60
-          title  = "Strapi ECS & ALB Metrics"
+          period      = 300
+          stat        = "Average"
+          region      = var.aws_region
+          title       = "ECS CPU Utilization"
+          annotations = {}
+        }
+      },
+
+      # Memory Utilization widget
+      {
+        type       = "metric"
+        x          = 0
+        y          = 6
+        width      = 12
+        height     = 6
+        properties = {
+          metrics     = [
+            ["AWS/ECS", "MemoryUtilization", "ClusterName", "strapi-cluster", "ServiceName", "strapi-service"]
+          ]
+          period      = 300
+          stat        = "Average"
+          region      = var.aws_region
+          title       = "ECS Memory Utilization"
+          annotations = {}
+        }
+      },
+
+      # Service Healthy Task Count widget
+      {
+        type       = "metric"
+        x          = 12
+        y          = 0
+        width      = 12
+        height     = 6
+        properties = {
+          metrics     = [
+            ["AWS/ECS", "RunningTaskCount", "ClusterName", "strapi-cluster", "ServiceName", "strapi-service"]
+          ]
+          period      = 300
+          stat        = "Average"
+          region      = var.aws_region
+          title       = "ECS Running Tasks"
+          annotations = {}
         }
       }
     ]
