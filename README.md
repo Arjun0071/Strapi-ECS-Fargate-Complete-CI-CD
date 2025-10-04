@@ -1,1 +1,1 @@
-# Strapi-ECS-Fargate-Complete-CI-CD
+# Strapi-ECS-Fargate-Complete-CI/CD
