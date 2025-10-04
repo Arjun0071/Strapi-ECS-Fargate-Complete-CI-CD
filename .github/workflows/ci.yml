@@ -45,12 +45,3 @@ jobs:
       - name: Set image tag output
         id: image
         run: echo "image_tag=${{ github.sha }}" >> $GITHUB_OUTPUT
-
-      # Step 7: Trigger CD workflow
-      - name: Trigger CD workflow
-        uses: peter-evans/workflow-dispatch@v2
-        with:
-          workflow: "CD - Terraform Deploy Strapi"
-          ref: main
-          inputs: |
-            image_tag=${{ steps.image.outputs.image_tag }}
