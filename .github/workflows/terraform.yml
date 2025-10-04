@@ -1,11 +1,12 @@
 name: CD - Terraform Deploy Strapi
 
-# Trigger automatically after CI workflow succeeds
+# Triggered manually or via CI workflow dispatch
 on:
-  workflow_run:
-    workflows: ["CI - Build & Push Docker Image"]
-    types:
-      - completed
+  workflow_dispatch:
+    inputs:
+      image_tag:
+        description: 'Docker image tag to deploy'
+        required: true
 
 jobs:
   deploy:
@@ -16,7 +17,7 @@ jobs:
       AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
       ECR_REGISTRY: ${{ secrets.ECR_REGISTRY }}
       ECR_REPO: ${{ secrets.ECR_REPO }}
-      IMAGE_TAG: ${{ github.event.workflow_run.outputs.image_tag }}
+      IMAGE_TAG: ${{ github.event.inputs.image_tag }}
 
     steps:
       # Step 1: Checkout repository
