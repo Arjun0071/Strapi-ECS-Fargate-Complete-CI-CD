@@ -50,7 +50,7 @@ jobs:
       - name: Trigger CD workflow
         uses: peter-evans/workflow-dispatch@v1
         with:
-          workflow: "CD - Terraform Deploy Strapi"   # Name of your CD workflow file
-          ref: main                                  # Branch to trigger on
-          inputs:
-            image_tag: ${{ steps.image.outputs.image_tag }}
+          workflow: "CD - Terraform Deploy Strapi"
+          ref: main
+          inputs: |
+            image_tag=${{ steps.image.outputs.image_tag }}
