@@ -7,6 +7,17 @@ resource "aws_ecs_cluster" "cluster" {
   name = "strapi-cluster"
 }
 
+resource "aws_ecs_cluster_capacity_providers" "strapi_cluster_capacity" {
+  cluster_name = aws_ecs_cluster.cluster.name
+
+  capacity_providers = ["FARGATE", "FARGATE_SPOT"]
+
+  default_capacity_provider_strategy {
+    capacity_provider = "FARGATE_SPOT"
+    weight            = 1
+  }
+}
+
 resource "aws_iam_role" "ecsTaskExecutionRole" {
   name = "ecsTaskExecutionRole"
   assume_role_policy = jsonencode({
@@ -129,7 +140,10 @@ resource "aws_ecs_service" "strapi_service" {
   cluster         = aws_ecs_cluster.cluster.id
   task_definition = aws_ecs_task_definition.strapi_task.arn
   desired_count   = 1
-  launch_type     = "FARGATE"
+  capacity_provider_strategy {
+    capacity_provider = "FARGATE_SPOT"
+    weight            = 1
+  }
 
   network_configuration {
     subnets          = data.aws_subnets.default.ids
